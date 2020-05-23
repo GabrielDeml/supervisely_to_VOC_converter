@@ -7,8 +7,8 @@ def file_locations(folder):
     i = 0
     list_of_files = []
     for filename in os.listdir(folder):
-        list_of_files.append(folder + filename)
-        print(folder + filename)
+        list_of_files.append(filename)
+        # print(folder + filename)
         i = i + 1
     return list_of_files
     # with open(os.path.join(os.cwd(), filename), 'r') as f:
@@ -52,10 +52,10 @@ def write_xml(cords, width, height, depth, filename, folder):
 
     # Write to a file
     tree = ET.ElementTree(annotation)
-    tree.write(filename + ".xml")
+    tree.write(folder + filename + ".xml")
 
 
-def convert_to_xml(folder_in, file_in, file_out):
+def convert_to_xml(folder_in, file_in, folder_out):
     with open(folder_in + file_in) as f:
         data = json.load(f)
         # find the cords
@@ -71,7 +71,7 @@ def convert_to_xml(folder_in, file_in, file_out):
                     while k < 2:
                         point.append(data['objects'][i]['points']['exterior'][j][k])
                         k = k + 1
-                    j = j + 1
+                    j = j +    1
                 cords.append(point)
             print(cords)
         else:
@@ -79,13 +79,15 @@ def convert_to_xml(folder_in, file_in, file_out):
         width = data['size']['width']
         height = data['size']['height']
         print(str(width) + " " + str(height))
-        write_xml(cords, width, height, 3, file_in, folder_in)
+        write_xml(cords, width, height, 3, file_in, folder_out)
         # write_xml(cords,)
 
 
 if __name__ == "__main__":
     # write_xml([["name", 1, 2, 3, 4], ["name2", 5, 6, 7, 8]], 1080, 1920, 3, "filename", "folder")
-    # list_of_files = file_locations('Filming Day 2 Video/ann/')
+    list_of_files = file_locations('Filming Day 2 Video/ann/')
     # print(list_of_files)
     # print_json_data('Filming Day 2 Video/ann/frame_00000.png.json')
-    convert_to_xml('Filming Day 2 Video/ann/', 'frame_00000.png.json', "null")
+    for file in list_of_files:
+        print(file)
+        convert_to_xml('Filming Day 2 Video/ann/', file, "test/")
