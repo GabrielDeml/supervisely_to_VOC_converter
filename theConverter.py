@@ -18,6 +18,7 @@ args = parser.parse_args()
 
 ##
 # Create fake VOC2012 file structure
+# location: location of the root folder
 def create_voc(location):
     # Check if we can overwrite the folder
     if os.path.exists(os.path.join(location, "voc2012_raw")):
@@ -33,6 +34,15 @@ def create_voc(location):
 
 ##
 # Writes an XML given prams
+# cords: A list of lists containing points - [["name", x, y, x1, y1], ["name2", x, y, x1, y1]]
+# width: the width of the image
+# height: the height of the image
+# depth: color depth of the image. For RGB this should be 3
+# filename: file of the xml to write
+# folder: folder to write the xml to
+# difficult: the difficultly to see the image. This should be set to 0
+# truncated: see VOC docs. Should be set to 0
+# pose: see VOC docs. Should be set to Unspecified
 def write_xml(cords, width, height, depth, filename, folder, difficult, truncated, pose):
     # Make the names right
     if folder[-1] != '/':
@@ -77,8 +87,11 @@ def write_xml(cords, width, height, depth, filename, folder, difficult, truncate
     tree = ET.ElementTree(annotation)
     tree.write(folder + filename[:-4] + ".xml")
 
-
+##
 # Convert Json to XML
+# folder_in: folder that contains the json
+# file_in: name of json file
+# folder_out: folder to write the XML to
 def convert_to_xml(folder_in, file_in, folder_out):
     with open(folder_in + file_in) as f:
         data = json.load(f)
@@ -109,7 +122,10 @@ def convert_to_xml(folder_in, file_in, folder_out):
         # Write it to XML
         write_xml(cords, width, height, 3, file_in, folder_out, 0, 0, "Unspecified")
 
-
+##
+# Converts a whole folder from json into XML
+# input: folder containing the jsons
+# output: folder to write the XMLs
 def convert_files(input, output):
     # Check to see if we can overwrite the file
     if os.path.exists(output):
@@ -123,19 +139,31 @@ def convert_files(input, output):
         convert_to_xml(input, file, output)
 
 
+##
+# Gets the location of the jsons that need to be read
+# Return: list of folders to read
 def get_location_of_jsons():
     if args.supervisely is not None:
+        print(glob.glob(args.supervisely + "/**/ann/"))
         return glob.glob(args.supervisely + "/**/ann/")
     else:
         return [args.input]
 
 
+##
+# Copy images from supervisely to file
+# super: location of the root supervisely folder
+# dest folder to write images to
 def copy_files_from_supervisely(super, dest):
     for src in glob.glob(super + "/**/img/"):
         for file in os.listdir(src):
             shutil.copyfile(os.path.join(src, file), os.path.join(dest, file))
 
 
+##
+# write append to file or make file in ImageSets/Main
+# file: the file to write to in Main
+# value: the value to append to the file
 def write_to_main(file, value):
     writer = open(os.path.join(args.output, "voc2012_raw/VOCdevkit/VOC2012/ImageSets/Main", file), "a")
     writer.write(value)
@@ -146,6 +174,7 @@ if __name__ == "__main__":
     if args.pretend:
         create_voc(args.output)
         for location in get_location_of_jsons():
+            print(location)
             convert_files(location, os.path.join(args.output, "voc2012_raw/VOCdevkit/VOC2012/Annotations/"))
         copy_files_from_supervisely(args.supervisely,
                                     os.path.join(args.output, "voc2012_raw/VOCdevkit/VOC2012/JPEGImages/"))
