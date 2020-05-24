@@ -2,11 +2,31 @@ import xml.etree.cElementTree as ET
 import os
 import json
 import argparse
+import glob
+import sys
+import shutil
 
 parser = argparse.ArgumentParser()
 parser.add_argument("-i", "--input", type=str, default='.', help="Location of Jsons to read")
+parser.add_argument("-s", "--supervisely", type=str, help="Location of Supervisely folder")
 parser.add_argument("-o", "--output", type=str, default='.', help="Location of XMLs to  write")
+parser.add_argument('-p', "--pretend", default=False, action='store_true', help="Pretend to be VOC2012")
+parser.add_argument("-r", "--overwrite", default=False, action='store_true',
+                    help="Overwrite the output dir if it exists")
 args = parser.parse_args()
+
+
+##
+# Create fake VOC2012 file structure
+def create_voc(location):
+    if os.path.exists(os.path.join(location, "voc2012_raw")):
+        if args.overwrite:
+            shutil.rmtree(os.path.join(location, "voc2012_raw"), ignore_errors=True)
+        else:
+            sys.exit("Folder already exists: {}".format(os.path.join(location, "voc2012_raw")))
+    os.makedirs(os.path.join(location, "voc2012_raw/VOCdevkit/VOC2012/Annotations"))
+    os.makedirs(os.path.join(location, "voc2012_raw/VOCdevkit/VOC2012/JPEGImages"))
+
 
 ##
 # Writes an XML given prams
@@ -22,7 +42,10 @@ def write_xml(cords, width, height, depth, filename, folder):
     annotation = ET.Element("annotation")
 
     # folder
-    ET.SubElement(annotation, "folder").text = str(folder_out_name)
+    if args.pretend:
+        ET.SubElement(annotation, "folder").text = "VOC2012"
+    else:
+        ET.SubElement(annotation, "folder").text = str(folder_out_name)
 
     # filename
     ET.SubElement(annotation, "filename").text = str(filename)
@@ -81,6 +104,29 @@ def convert_to_xml(folder_in, file_in, folder_out):
         write_xml(cords, width, height, 3, file_in, folder_out)
 
 
+def convert_files(input, output):
+    # Check to see if we can overwrite the file
+    if os.path.exists(output):
+        if args.overwrite:
+            shutil.rmtree(output, ignore_errors=True)
+        else:
+            sys.exit("Folder already exists: {}".format(output))
+    os.makedirs(output)
+    for file in os.listdir(input):
+        convert_to_xml(input, file, output)
+
+
+def get_location_of_jsons():
+    if args.supervisely is not None:
+        return glob.glob(args.supervisely + "/**/ann/")[0]
+    else:
+        return args.input
+
+
 if __name__ == "__main__":
-    for file in os.listdir(args.input):
-        convert_to_xml(args.input, file, args.output)
+    # print(args.supervisely)
+    if args.pretend:
+        create_voc(args.output)
+        convert_files(get_location_of_jsons(), os.path.join(args.output, "voc2012_raw/VOCdevkit/VOC2012/Annotations/"))
+    else:
+        convert_files(get_location_of_jsons(), args.output)
