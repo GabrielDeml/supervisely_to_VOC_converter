@@ -19,11 +19,13 @@ args = parser.parse_args()
 ##
 # Create fake VOC2012 file structure
 def create_voc(location):
+    # Check if we can overwrite the folder
     if os.path.exists(os.path.join(location, "voc2012_raw")):
         if args.overwrite:
             shutil.rmtree(os.path.join(location, "voc2012_raw"), ignore_errors=True)
         else:
             sys.exit("Folder already exists: {}".format(os.path.join(location, "voc2012_raw")))
+    # Create the folders
     os.makedirs(os.path.join(location, "voc2012_raw/VOCdevkit/VOC2012/Annotations"))
     os.makedirs(os.path.join(location, "voc2012_raw/VOCdevkit/VOC2012/JPEGImages"))
 
@@ -112,6 +114,7 @@ def convert_files(input, output):
         else:
             sys.exit("Folder already exists: {}".format(output))
     os.makedirs(output)
+    # Convert all of the jsons
     for file in os.listdir(input):
         convert_to_xml(input, file, output)
 
@@ -123,10 +126,17 @@ def get_location_of_jsons():
         return args.input
 
 
+def copy_files_from_supervisely(super, dest):
+    src = glob.glob(super + "/**/img/")[0]
+    for file in os.listdir(src):
+        shutil.copyfile(os.path.join(src, file), os.path.join(dest, file))
+
+
 if __name__ == "__main__":
-    # print(args.supervisely)
     if args.pretend:
         create_voc(args.output)
         convert_files(get_location_of_jsons(), os.path.join(args.output, "voc2012_raw/VOCdevkit/VOC2012/Annotations/"))
+        copy_files_from_supervisely(args.supervisely,
+                                    os.path.join(args.output, "voc2012_raw/VOCdevkit/VOC2012/JPEGImages/"))
     else:
         convert_files(get_location_of_jsons(), args.output)
