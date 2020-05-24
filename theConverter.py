@@ -1,36 +1,29 @@
 import xml.etree.cElementTree as ET
 import os
 import json
+import argparse
 
+parser = argparse.ArgumentParser()
+parser.add_argument("-i", "--input", type=str, default='.', help="Location of Jsons to read")
+parser.add_argument("-o", "--output", type=str, default='.', help="Location of XMLs to  write")
+args = parser.parse_args()
 
-def file_locations(folder):
-    i = 0
-    list_of_files = []
-    for filename in os.listdir(folder):
-        list_of_files.append(filename)
-        # print(folder + filename)
-        i = i + 1
-    return list_of_files
-    # with open(os.path.join(os.cwd(), filename), 'r') as f:
-
-
-def print_json_data(file):
-    with open(file) as f:
-        data = json.load(f)
-        # if data['objects'] is not None:
-        #     print(range(len(data['objects'])))
-        #     for i in range(len(data['objects'])):
-        #         print('point {} :'.format(i))
-        #         print(data['objects'][i]['points']['exterior'])
-        # else:
-        #     print('There was nothing in objects in: ' + file)
-
-
+##
+# Writes an XML given prams
 def write_xml(cords, width, height, depth, filename, folder):
+    # Make the names right
+    if folder[-1] != '/':
+        folder_out_name = folder
+        folder = folder + '/'
+    else:
+        folder_out_name = folder[:-1]
+    filename = filename[:-5]
+
     annotation = ET.Element("annotation")
 
     # folder
-    ET.SubElement(annotation, "folder").text = str(folder)
+    ET.SubElement(annotation, "folder").text = str(folder_out_name)
+
     # filename
     ET.SubElement(annotation, "filename").text = str(filename)
 
@@ -51,43 +44,43 @@ def write_xml(cords, width, height, depth, filename, folder):
         ET.SubElement(bndbox, "ymax").text = str(point[4])
 
     # Write to a file
+    print("Writing: {}{}.xml".format(folder, filename[:-4]))
     tree = ET.ElementTree(annotation)
-    tree.write(folder + filename + ".xml")
+    tree.write(folder + filename[:-4] + ".xml")
 
 
+# Convert Json to XML
 def convert_to_xml(folder_in, file_in, folder_out):
     with open(folder_in + file_in) as f:
         data = json.load(f)
         # find the cords
         if data['objects'] is not None:
+            # List of points
             cords = []
-            print(range(len(data['objects'])))
+            # Go over every object
             for i in range(len(data['objects'])):
-                point = []
-                point.append(data['objects'][i]["classTitle"])
+                # Example point: ["name", x, y, x1, y1]
+                point = [data['objects'][i]["classTitle"]]
                 j = 0
+                # Make a point
                 while j < 2:
                     k = 0
                     while k < 2:
                         point.append(data['objects'][i]['points']['exterior'][j][k])
                         k = k + 1
-                    j = j +    1
+                    j = j + 1
                 cords.append(point)
-            print(cords)
         else:
-            print('There was nothing in objects in: ' + file_in)
+            print('There was nothing in objects for: ' + file_in)
+
+        # Get width and height
         width = data['size']['width']
         height = data['size']['height']
-        print(str(width) + " " + str(height))
+
+        # Write it to XML
         write_xml(cords, width, height, 3, file_in, folder_out)
-        # write_xml(cords,)
 
 
 if __name__ == "__main__":
-    # write_xml([["name", 1, 2, 3, 4], ["name2", 5, 6, 7, 8]], 1080, 1920, 3, "filename", "folder")
-    list_of_files = file_locations('Filming Day 2 Video/ann/')
-    # print(list_of_files)
-    # print_json_data('Filming Day 2 Video/ann/frame_00000.png.json')
-    for file in list_of_files:
-        print(file)
-        convert_to_xml('Filming Day 2 Video/ann/', file, "test/")
+    for file in os.listdir(args.input):
+        convert_to_xml(args.input, file, args.output)
