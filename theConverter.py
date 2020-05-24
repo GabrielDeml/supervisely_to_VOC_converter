@@ -28,6 +28,7 @@ def create_voc(location):
     # Create the folders
     os.makedirs(os.path.join(location, "voc2012_raw/VOCdevkit/VOC2012/Annotations"))
     os.makedirs(os.path.join(location, "voc2012_raw/VOCdevkit/VOC2012/JPEGImages"))
+    os.makedirs(os.path.join(location, "voc2012_raw/VOCdevkit/VOC2012/ImageSets/Main"))
 
 
 ##
@@ -67,7 +68,7 @@ def write_xml(cords, width, height, depth, filename, folder):
         ET.SubElement(bndbox, "ymin").text = str(point[2])
         ET.SubElement(bndbox, "xmax").text = str(point[3])
         ET.SubElement(bndbox, "ymax").text = str(point[4])
-
+        write_to_main(point[0] + ".txt", filename[:-4] + "\n")
     # Write to a file
     print("Writing: {}{}.xml".format(folder, filename[:-4]))
     tree = ET.ElementTree(annotation)
@@ -130,6 +131,12 @@ def copy_files_from_supervisely(super, dest):
     src = glob.glob(super + "/**/img/")[0]
     for file in os.listdir(src):
         shutil.copyfile(os.path.join(src, file), os.path.join(dest, file))
+
+def write_to_main(file, value):
+    writer = open(os.path.join(args.output, "voc2012_raw/VOCdevkit/VOC2012/ImageSets/Main", file), "a")
+    writer.write(value)
+    writer.close()
+
 
 
 if __name__ == "__main__":
