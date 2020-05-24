@@ -1,1 +1,0 @@
-<annotation><folder>folder</folder><filename>filename</filename><size><width>1080</width><height>1920</height><depth>3</depth></size><object><name>name</name><bndbox><xmin>1</xmin><ymin>2</ymin><xmax>3</xmax><ymax>4</ymax></bndbox></object><object><name>name2</name><bndbox><xmin>5</xmin><ymin>6</ymin><xmax>7</xmax><ymax>8</ymax></bndbox></object></annotation>
