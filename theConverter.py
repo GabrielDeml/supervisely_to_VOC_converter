@@ -125,15 +125,16 @@ def convert_files(input, output):
 
 def get_location_of_jsons():
     if args.supervisely is not None:
-        return glob.glob(args.supervisely + "/**/ann/")[0]
+        return glob.glob(args.supervisely + "/**/ann/")
     else:
-        return args.input
+        return [args.input]
 
 
 def copy_files_from_supervisely(super, dest):
-    src = glob.glob(super + "/**/img/")[0]
-    for file in os.listdir(src):
-        shutil.copyfile(os.path.join(src, file), os.path.join(dest, file))
+    for src in glob.glob(super + "/**/img/"):
+        for file in os.listdir(src):
+            shutil.copyfile(os.path.join(src, file), os.path.join(dest, file))
+
 
 def write_to_main(file, value):
     writer = open(os.path.join(args.output, "voc2012_raw/VOCdevkit/VOC2012/ImageSets/Main", file), "a")
@@ -141,12 +142,12 @@ def write_to_main(file, value):
     writer.close()
 
 
-
 if __name__ == "__main__":
     if args.pretend:
         create_voc(args.output)
-        convert_files(get_location_of_jsons(), os.path.join(args.output, "voc2012_raw/VOCdevkit/VOC2012/Annotations/"))
+        for location in get_location_of_jsons():
+            convert_files(location, os.path.join(args.output, "voc2012_raw/VOCdevkit/VOC2012/Annotations/"))
         copy_files_from_supervisely(args.supervisely,
                                     os.path.join(args.output, "voc2012_raw/VOCdevkit/VOC2012/JPEGImages/"))
     else:
-        convert_files(get_location_of_jsons(), args.output)
+        convert_files(get_location_of_jsons()[0], args.output)
