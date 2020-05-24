@@ -33,7 +33,7 @@ def create_voc(location):
 
 ##
 # Writes an XML given prams
-def write_xml(cords, width, height, depth, filename, folder):
+def write_xml(cords, width, height, depth, filename, folder, difficult, truncated, pose):
     # Make the names right
     if folder[-1] != '/':
         folder_out_name = folder
@@ -63,12 +63,15 @@ def write_xml(cords, width, height, depth, filename, folder):
     for point in cords:
         object = ET.SubElement(annotation, "object")
         ET.SubElement(object, "name").text = point[0]
+        ET.SubElement(object, "pose").text = pose
+        ET.SubElement(object, "truncated").text = str(truncated)
+        ET.SubElement(object, "difficult").text = str(difficult)
         bndbox = ET.SubElement(object, "bndbox")
         ET.SubElement(bndbox, "xmin").text = str(point[1])
         ET.SubElement(bndbox, "ymin").text = str(point[2])
         ET.SubElement(bndbox, "xmax").text = str(point[3])
         ET.SubElement(bndbox, "ymax").text = str(point[4])
-        write_to_main(point[0] + ".txt", filename[:-4] + "\n")
+        write_to_main(point[0] + ".txt", filename[:-4] + " -1\n")
     # Write to a file
     print("Writing: {}{}.xml".format(folder, filename[:-4]))
     tree = ET.ElementTree(annotation)
@@ -104,7 +107,7 @@ def convert_to_xml(folder_in, file_in, folder_out):
         height = data['size']['height']
 
         # Write it to XML
-        write_xml(cords, width, height, 3, file_in, folder_out)
+        write_xml(cords, width, height, 3, file_in, folder_out, 0, 0, "Unspecified")
 
 
 def convert_files(input, output):
