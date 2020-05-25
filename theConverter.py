@@ -165,6 +165,9 @@ def write_to_main(file, value):
     writer.close()
 
 
+##
+# Clears dir if flag is set
+# location: dir to clear
 def clear_dir(location):
     # Check to see if we can overwrite the file
     if os.path.exists(location):
