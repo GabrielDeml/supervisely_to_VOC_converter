@@ -87,6 +87,7 @@ def write_xml(cords, width, height, depth, filename, folder, difficult, truncate
     tree = ET.ElementTree(annotation)
     tree.write(folder + filename[:-4] + ".xml")
 
+
 ##
 # Convert Json to XML
 # folder_in: folder that contains the json
@@ -122,18 +123,12 @@ def convert_to_xml(folder_in, file_in, folder_out):
         # Write it to XML
         write_xml(cords, width, height, 3, file_in, folder_out, 0, 0, "Unspecified")
 
+
 ##
 # Converts a whole folder from json into XML
 # input: folder containing the jsons
 # output: folder to write the XMLs
 def convert_files(input, output):
-    # Check to see if we can overwrite the file
-    if os.path.exists(output):
-        if args.overwrite:
-            shutil.rmtree(output, ignore_errors=True)
-        else:
-            sys.exit("Folder already exists: {}".format(output))
-    os.makedirs(output)
     # Convert all of the jsons
     for file in os.listdir(input):
         convert_to_xml(input, file, output)
@@ -170,6 +165,16 @@ def write_to_main(file, value):
     writer.close()
 
 
+def clear_dir(location):
+    # Check to see if we can overwrite the file
+    if os.path.exists(location):
+        if args.overwrite:
+            shutil.rmtree(location, ignore_errors=True)
+        else:
+            sys.exit("Folder already exists: {}".format(location))
+    os.makedirs(location)
+
+
 if __name__ == "__main__":
     if args.pretend:
         create_voc(args.output)
@@ -179,4 +184,6 @@ if __name__ == "__main__":
         copy_files_from_supervisely(args.supervisely,
                                     os.path.join(args.output, "voc2012_raw/VOCdevkit/VOC2012/JPEGImages/"))
     else:
+        if args.output != ".":
+            clear_dir(args.output)
         convert_files(get_location_of_jsons()[0], args.output)
